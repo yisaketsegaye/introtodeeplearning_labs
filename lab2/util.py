@@ -1,5 +1,6 @@
 import cv2
 import os
+import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 import time
@@ -32,6 +33,9 @@ class TrainingDatasetLoader(object):
 
     def get_train_size(self):
         return self.train_inds.shape[0]
+    
+    def get_train_steps_per_epoch(self, batch_size, factor=10):
+        return self.get_train_size()//factor//batch_size
 
     def get_batch(self, n, only_faces=False, p_pos=None, p_neg=None, return_inds=False):
         if only_faces:
@@ -97,7 +101,7 @@ class PPBFaceEvaluator:
 
     def evaluate(self, models_to_test, gender, skin_color, output_idx=None, from_logit=False):
         patch_stride = 0.2
-        patch_depth = 2
+        patch_depth = 5
         correct_predictions = [0.0]*len(models_to_test)
 
         key = self.__get_key(gender, skin_color)
@@ -170,42 +174,3 @@ def slide_square(img, stride, min_size, max_size, n):
 
     return square_images, square_bbox
 
-
-
-
-#####################################
-def custom_progress_text(message):
-  import progressbar
-  from string import Formatter
-
-  message_ = message.replace('(', '{')
-  message_ = message_.replace(')', '}')
-
-  keys = [key[1] for key in Formatter().parse(message_)]
-
-  ids = {}
-  for key in keys:
-    if key is not None:
-      ids[key] = float('nan')
-
-  msg = progressbar.FormatCustomText(message, ids)
-  return msg
-
-def create_progress_bar(text=None):
-  import progressbar
-  if text is None:
-    text = progressbar.FormatCustomText('')
-  bar = progressbar.ProgressBar(widgets=[
-      progressbar.Percentage(),
-      progressbar.Bar(),
-      progressbar.AdaptiveETA(), '  ',
-      text,
-  ])
-  return bar
-
-def display_model(model):
-  tf.keras.utils.plot_model(model,
-             to_file='tmp.png',
-             show_shapes=True)
-  from IPython.display import Image
-  return Image('tmp.png')
